@@ -1,0 +1,141 @@
+﻿@using ThirdStream.RaceTrack.Models
+@model ThirdStream.RaceTrack.Models.Track
+
+<h3>@Html.DisplayFor(m => Model.Name)</h3>
+
+@Html.HiddenFor(m => m.TrackType)
+@Html.HiddenFor(m => m.Id)
+
+<table class="table">
+    <thead>
+        @if (Model.TrackType == "Car")
+        {
+            <tr>
+                <th>Car Id</th>
+                <th>Tow Strap</th>
+                <th>Tire Wear</th>
+            </tr>
+        }
+        else if (Model.TrackType == "Truck")
+        {
+            <tr>
+                <th>Truck Id</th>
+                <th>Tow Strap</th>
+                <th>Lift</th>
+            </tr>
+        }
+    </thead>
+    <tbody>
+        @foreach (var vehicle in Model.Vehicles)
+        {
+            if (vehicle is Car car)
+            {
+                <tr>
+                    <td>
+                        @car.Id.ToString()
+                    </td>
+                    <td>
+                        @(car.HasTowStrap ? "Yes" : "No")
+                    </td>
+                    <td>
+                        @($"{car.TireWearPercentage}%")
+                    </td>
+                </tr>
+            }
+            else if (vehicle is Truck truck)
+            {
+                <tr>
+                    <td>
+                        @truck.Id.ToString()
+                    </td>
+                    <td>
+                        @(truck.HasTowStrap ? "Yes" : "No")
+                    </td>
+                    <td>
+                        @($"{truck.Lift.ToString()} inch")
+                    </td>
+                </tr>
+            }
+        }
+    </tbody>
+</table>
+
+<br />
+<br />
+
+<div style="float: right; padding: 8px;" class="border">
+    @if (Model.TrackType == "Car")
+    {
+        <b>@Html.Label("Add New Car")</b> <br />
+        @Html.Label("Tow Strap: ")
+        @Html.CheckBox("carTowStrap", true) <br />
+        @Html.Label("Tire Wear: ")
+        @Html.TextBox("carTireWear", "0", new { @type = "number", @min = "0", @max = "100" }) <br />
+        if (Model.Vehicles.Count < 5)
+        {
+            <button type="button" class="btn-primary" style="float: right">Add Car</button>
+        }
+        else
+        {
+            <button type="button" class="btn-dark" style="float: right" disabled="disabled">Add Car</button>
+        }
+    }
+    else if (Model.TrackType == "Truck")
+    {
+        <b>@Html.Label("Add New Truck")</b> <br />
+        @Html.Label("Tow Strap: ")
+        @Html.CheckBox("truckTowStrap", true) <br />
+        @Html.Label("Lift: ")
+        @Html.TextBox("truckLift", "0", new { @type = "number", @min = "0", @max = "5" }) <br />
+
+        if (Model.Vehicles.Count < 5)
+        {
+            <button type="button" class="btn-primary" style="float: right" >Add Truck</button>
+        }
+        else
+        {
+            <button type="button" class="btn-dark" style="float: right" disabled="disabled">Add Truck</button>
+        }
+    }
+</div>
+
+<p>Fetched at @DateTime.Now</p>
+
+<script>
+    $(document).ready(function () {
+        $('button').on('click',
+            function () {
+                if ($('#TrackType').val() == 'Car') {
+                    $.ajax({
+                        type: 'POST',
+                        url: "/Race/OnAddCar",
+                        data: { trackId: $('#Id').val(), hasTowStrap: $('#carTowStrap').is(':checked'), tireWear: $('#carTireWear').val() },
+                        success: (data) => {
+                            if (data.ReturnStatus == 'error')
+                                alert(data.ReturnData);
+                            else {
+                                $('#trackForm').trigger('submit');
+                            }
+                        },
+                        error: (err) => {
+                             alert(err.statusText);
+                        }
+                    });
+                } else {
+                    $.ajax({
+                        type: 'POST',
+                        url: "/Race/OnAddTruck",
+                        data: { trackId: $('#Id').val(), hasTowStrap: $('#truckTowStrap').is(':checked'), lift: $('#truckLift').val() },
+                        success: (data) => {
+                            if (data.ReturnStatus == 'error')
+                                alert(data.ReturnData);
+                            else {
+                                $('#trackForm').trigger('submit');
+                            }
+                        },
+                        error: (err) => { alert(err.statusText); }
+                    });
+                }
+            });
+    });
+</script>
